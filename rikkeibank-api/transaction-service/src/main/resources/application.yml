@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: transaction-service
+  config:
+    import: "configserver:http://localhost:8888"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    circuitbreakers:
+      enabled: true

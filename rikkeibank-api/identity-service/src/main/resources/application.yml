@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: identity-service
+  config:
+    import: "configserver:http://localhost:8888"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

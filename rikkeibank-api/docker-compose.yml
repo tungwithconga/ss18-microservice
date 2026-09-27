@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # ─── Databases ─────────────────────────────────────────────────────────────
+  mysql-identity:
+    image: mysql:8.0
+    container_name: mysql-identity
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rikkeibank_identity
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_identity_data:/var/lib/mysql
+    networks:
+      - rikkeibank-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-customer:
+    image: mysql:8.0
+    container_name: mysql-customer
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rikkeibank_customer
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_customer_data:/var/lib/mysql
+    networks:
+      - rikkeibank-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-account:
+    image: mysql:8.0
+    container_name: mysql-account
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rikkeibank_account
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_account_data:/var/lib/mysql
+    networks:
+      - rikkeibank-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-transaction:
+    image: mysql:8.0
+    container_name: mysql-transaction
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rikkeibank_transaction
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_transaction_data:/var/lib/mysql
+    networks:
+      - rikkeibank-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - rikkeibank-net
+
+  # ─── Kafka & Zookeeper ─────────────────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - rikkeibank-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - rikkeibank-net
+
+networks:
+  rikkeibank-net:
+    driver: bridge
+
+volumes:
+  mysql_identity_data:
+  mysql_customer_data:
+  mysql_account_data:
+  mysql_transaction_data:
